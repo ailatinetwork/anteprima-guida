@@ -117,9 +117,9 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 /* il pulsante compare in dissolvenza e sparisce appena si scorre: serve solo a far capire che c'è altro */
 .more{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease),visibility 0s .3s}
 .more.on{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%);transition:opacity .3s var(--ease),transform .3s var(--ease)}
-.more{position:absolute;left:50%;transform:translate(-50%,8px);z-index:6;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:var(--ink-2)}   /* solo una freccia nella sfumatura, senza fondo né scritta */
-.more svg{width:26px;height:26px;stroke:currentColor;stroke-width:2.4;animation:nudge-down 1.6s var(--ease) 2}
-.more:hover{color:var(--ink)}
+.more{position:absolute;left:50%;transform:translate(-50%,8px);z-index:6;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;color:var(--ink);background:var(--paper);box-shadow:0 0 0 1.5px var(--line),0 6px 16px -6px rgba(0,30,15,.35)}   /* freccia in un cerchio bianco: si stacca dal testo senza essere un pulsante vistoso */
+.more svg{width:26px;height:26px;stroke:currentColor;stroke-width:2.6;animation:nudge-down 1.6s var(--ease) 3}
+.more:hover{background:var(--lichen)}
 @keyframes nudge-down{0%,100%{transform:none}50%{transform:translateY(3px)}}
 @media (max-width:980px){ .morefade,.more{position:fixed} }
 .panel .scroll{flex:1;overflow-x:hidden;overflow-y:auto;padding:34px 34px 24px}   /* la colonna scorre solo in verticale */
@@ -1062,7 +1062,9 @@ document.addEventListener('click', e => { const c = e.target.closest('.kchip[dat
 // copia leggibile del display nella scheda del passo
 function mirrorScreen(scr) { const cv = $('#mirror'); if (!cv) return; drawScreen({ cv, ctx: cv.getContext('2d'), tex: {} }, scr); }
 function setFoot(html, one) { const f = $('#pFoot'); f.className = 'foot' + (one ? ' one' : ''); f.innerHTML = html; }
-let moreSeen = false;   // l'utente ha già scorso questo passo: il pulsante «Scorri» non serve più
+// freccia «c'è altro sotto»: serve finché l'utente non ha scorso una scheda la prima volta; poi non ricompare più su questo dispositivo
+let scrollLearned = (() => { try { return localStorage.getItem('ek-scorri') === '1'; } catch { return false; } })();
+let moreSeen = false;
 function panel(html) { const s = $('#pScroll'); s.innerHTML = `<div class="enter">${html}</div>`; s.scrollTop = 0; moreSeen = false; requestAnimationFrame(updateMore); }
 // «c'è altro sotto»: su computer e tablet in orizzontale scorre la colonna, su telefono e tablet in verticale scorre la pagina
 const phoneLayout = () => innerWidth <= 980;
@@ -1070,11 +1072,11 @@ function updateMore() {
   const m = $('#more'), f = $('#moreFade'), foot = $('#pFoot'), sc = $('#pScroll');
   if (!state.p || $('.app').hidden) { m.classList.remove('on'); f.classList.remove('on'); return; }
   const top = phoneLayout() ? scrollY : sc.scrollTop;
-  if (top > 30) moreSeen = true;
+  if (top > 30) { moreSeen = true; if (!scrollLearned) { scrollLearned = true; try { localStorage.setItem('ek-scorri', '1'); } catch {} } }
   const rest = phoneLayout() ? document.documentElement.scrollHeight - scrollY - innerHeight : sc.scrollHeight - sc.scrollTop - sc.clientHeight;
-  const b = foot.offsetHeight; m.style.bottom = (b + 6) + 'px'; f.style.bottom = b + 'px';
+  const b = foot.offsetHeight; m.style.bottom = (b + 10) + 'px'; f.style.bottom = b + 'px';
   f.classList.toggle('on', rest > 40);                 // sfumatura: finché sotto c'è altro
-  m.classList.toggle('on', rest > 40 && !moreSeen);    // pulsante: solo finché non si è scorso
+  m.classList.toggle('on', rest > 40 && !moreSeen && !scrollLearned);    // freccia: solo finché non si è imparato a scorrere
 }
 $('#more').onclick = () => { moreSeen = true; const sc = $('#pScroll'), by = Math.round((phoneLayout() ? innerHeight : sc.clientHeight) * .55);
   if (phoneLayout()) window.scrollBy({ top: by, behavior: REDUCED ? 'auto' : 'smooth' }); else sc.scrollBy({ top: by, behavior: REDUCED ? 'auto' : 'smooth' }); };
