@@ -30,6 +30,9 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+/* nella guida, con le colonne (oltre 980px: iPad in orizzontale, computer) la pagina è ferma: scorrono solo la colonna dei passi e il menu.
+   Su iPad il gesto non passa più alla pagina intera (prima, a fine colonna, si muoveva tutta la schermata) */
+@media (min-width:981px){ html.in-guide,html.in-guide body{height:100%;overflow:hidden;overscroll-behavior:none} }
 .boot-home .app,.boot-home .mbar{visibility:hidden}
 .boot-home body{background:#f5f7f5}
 html,body{margin:0;height:100%}
@@ -48,7 +51,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 .rail-head{padding:26px 24px 22px}
 .rail-head img{height:30px;display:block}
 .rail-head span{display:block;margin-top:10px;font-size:14px;color:var(--leaf)}
-.rail nav{flex:1;overflow:auto;padding:4px 12px 20px;scrollbar-color:var(--forest-2) transparent}
+.rail nav{flex:1;overflow:auto;overscroll-behavior:contain;padding:4px 12px 20px;scrollbar-color:var(--forest-2) transparent}
 .grp{margin-top:18px}
 .grp h2{margin:0 12px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--leaf)}
 .grp p{margin:2px 12px 8px;font-size:13px;color:var(--leaf)}
@@ -122,7 +125,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 .more:hover{background:var(--lichen)}
 @keyframes nudge-down{0%,100%{transform:none}50%{transform:translateY(3px)}}
 @media (max-width:980px){ .morefade,.more{position:fixed} }
-.panel .scroll{flex:1;overflow-x:hidden;overflow-y:auto;padding:34px 34px 24px}   /* la colonna scorre solo in verticale */
+.panel .scroll{flex:1;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:34px 34px 24px}   /* la colonna scorre solo in verticale */
 .panel .foot{padding:16px 20px 20px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
 .panel .foot.one{grid-template-columns:1fr}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:12px;height:58px;padding:0 22px;border-radius:var(--r);background:var(--brand-2);color:#fff;font-weight:700;font-size:17px;text-decoration:none;transition:background .2s,transform .2s var(--ease)}
@@ -1190,13 +1193,14 @@ $('#rail').addEventListener('click', e => { if (e.target.closest('a')) closeMenu
 
 function route() {
   const [a, b] = decodeURIComponent(location.hash.slice(1)).split('/');
-  $('#review')?.remove(); document.documentElement.classList.remove('boot-home', 'boot-guide');
+  $('#review')?.remove(); document.documentElement.classList.remove('boot-home', 'boot-guide', 'in-guide');
   if (a === 'schermate') { reviewScreens(); return; }
   const home = !procById[a];
   $('#home').hidden = !home; $('.app').hidden = home; $('.mbar').hidden = home; closeMenu();
   if (!home) { homeMotion.lenis?.scrollTo(0, { immediate: true, force: true }); window.scrollTo(0, 0); }
   homeMotion.lenis?.[home ? 'start' : 'stop']();
   keepAwake(!home);
+  document.documentElement.classList.toggle('in-guide', !home);
   if (home) { $('#more').classList.remove('on'); $('#moreFade').classList.remove('on'); }
   // al ritorno in home la si ridisegna (ultimo comando usato); la prima volta è già disegnata, con l'animazione d'ingresso
   if (home) { renderResume(); if (homeMotion.done || REDUCED || !window.gsap) renderHome(); state = {}; player?.set(null); document.title = 'Euroklimat · Guide ai comandi'; window.scrollTo(0, 0); homeMotion.lenis?.scrollTo(0, { immediate: true }); homeMotion.play?.(); return; }
