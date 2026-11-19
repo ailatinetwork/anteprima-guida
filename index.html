@@ -270,7 +270,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
 .p2press{inset:3%;border-radius:inherit;background:#0b1a12;opacity:0}
 /* velo arancione sul tasto: in moltiplica sopra la foto, così il simbolo nero del tasto resta leggibile */
 .p2fill{position:absolute;transform:translate(-50%,-50%);border-radius:12%/11%;background:var(--call-glow);mix-blend-mode:multiply;opacity:0;pointer-events:none}
-.p2finger{left:50%;top:50%;width:92%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(23,36,28,.12) 0,rgba(23,36,28,.08) 62%,rgba(23,36,28,0) 100%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.95)}
+.p2finger{left:50%;top:50%;width:92%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(23,36,28,.32) 0,rgba(23,36,28,.26) 58%,rgba(23,36,28,.1) 84%,rgba(23,36,28,0) 100%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.95),0 4px 10px rgba(0,20,10,.28)}   /* dito: abbastanza pieno da vedersi anche sul telefono */
 .p2ripple{left:50%;top:50%;width:94%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--call)}
 .p2hold{left:50%;top:50%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(-90deg);overflow:visible}
 .p2hold circle{fill:none;stroke:var(--call);stroke-width:6;stroke-dasharray:100;stroke-dashoffset:100;opacity:0;stroke-linecap:round}
@@ -452,6 +452,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
   .player{left:12px;right:12px;bottom:10px;column-gap:12px;row-gap:9px}
   .player .lbl{font-size:13.5px}
   .player .track .knob{width:18px;height:18px;margin:-9px 0 0 -9px}
+  .p2finger{width:118%}   /* sul telefono il tasto è piccolo: il dito un po' più grande del tasto */
   .ill{left:12px;top:90px;width:min(210px,56%);padding:10px 12px 10px}
   .panel{border-left:0}
   .panel .scroll{padding:28px 20px 32px;overflow:visible}
