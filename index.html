@@ -871,7 +871,8 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KA = { A: .46, DOWN: .08, UP: .14 };   // ritmo: circa un quarto più lento della versione veloce
 function keyAnim(u, hold) {
   const { A, DOWN } = KA, rel = A + DOWN + hold, o = {};
-  if (REDUCED) { const on = u >= 0 && u < rel + .3; return { press: on && u >= A ? 1 : 0, finger: 0, ripple: 0, on: on ? 1 : 0, pre: 1, hold: hold && u >= A ? Math.min(1, (u - A) / (hold + DOWN)) : 0 }; }
+  // «Riduci movimento» (iPhone, Mac): niente animazione, ma il dito resta fermo sul tasto per tutta la pressione: indica il tasto, non è decorazione
+  if (REDUCED) { const on = u >= 0 && u < rel + .3, down = u >= A * .5 && u < rel + .3; return { press: on && u >= A ? 1 : 0, finger: down ? 1 : 0, fscale: 1, ripple: 0, on: on ? 1 : 0, pre: 1, hold: hold && u >= A ? Math.min(1, (u - A) / (hold + DOWN)) : 0 }; }
   o.on = u >= 0 && u < rel + .35 ? Math.min(1, u / .18, (rel + .35 - u) / .25) : 0;
   o.pre = u < A ? Math.max(0, u / A) : 1;
   // dito: arriva sul tasto, resta durante la pressione, poi si solleva
