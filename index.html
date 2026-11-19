@@ -112,8 +112,12 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 /* scheda */
 .panel{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line);position:relative}
 /* «c'è altro sotto»: sfumatura sopra i pulsanti e pulsante «Scorri», solo finché sotto c'è altro da leggere */
-.morefade{position:absolute;left:0;right:0;height:64px;background:linear-gradient(rgba(255,255,255,0),#fff 85%);pointer-events:none;z-index:5}
-.more{position:absolute;left:50%;transform:translateX(-50%);z-index:6;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px 0 16px;border-radius:999px;background:var(--forest);color:#fff;font-weight:700;font-size:15px;box-shadow:0 8px 18px -8px rgba(0,30,15,.5)}
+.morefade{position:absolute;left:0;right:0;height:64px;background:linear-gradient(rgba(255,255,255,0),#fff 85%);pointer-events:none;z-index:5;opacity:0;transition:opacity .35s var(--ease)}
+.morefade.on{opacity:1}
+/* il pulsante compare in dissolvenza e sparisce appena si scorre: serve solo a far capire che c'è altro */
+.more{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease),transform .3s var(--ease),visibility 0s .3s}
+.more.on{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.more{position:absolute;left:50%;transform:translate(-50%,8px);z-index:6;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px 0 16px;border-radius:999px;background:var(--forest);color:#fff;font-weight:700;font-size:15px;box-shadow:0 8px 18px -8px rgba(0,30,15,.5)}
 .more svg{width:18px;height:18px;stroke:#fff;stroke-width:2.4;animation:nudge-down 1.6s var(--ease) 2}
 .more:hover{background:var(--forest-2)}
 @keyframes nudge-down{0%,100%{transform:none}50%{transform:translateY(3px)}}
@@ -549,8 +553,8 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
   </main>
   <section class="panel" aria-live="polite">
     <div class="scroll" id="pScroll"></div>
-    <div class="morefade" id="moreFade" hidden></div>
-    <button class="more" id="more" type="button" hidden aria-label="Scorri in giù: c'è altro da leggere"><span>Scorri</span><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
+    <div class="morefade" id="moreFade" aria-hidden="true"></div>
+    <button class="more" id="more" type="button" tabindex="-1" aria-label="Scorri in giù: c'è altro da leggere"><span>Scorri</span><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
     <div class="foot" id="pFoot"></div>
   </section>
 </div>
@@ -1058,18 +1062,21 @@ document.addEventListener('click', e => { const c = e.target.closest('.kchip[dat
 // copia leggibile del display nella scheda del passo
 function mirrorScreen(scr) { const cv = $('#mirror'); if (!cv) return; drawScreen({ cv, ctx: cv.getContext('2d'), tex: {} }, scr); }
 function setFoot(html, one) { const f = $('#pFoot'); f.className = 'foot' + (one ? ' one' : ''); f.innerHTML = html; }
-function panel(html) { const s = $('#pScroll'); s.innerHTML = `<div class="enter">${html}</div>`; s.scrollTop = 0; requestAnimationFrame(updateMore); }
+let moreSeen = false;   // l'utente ha già scorso questo passo: il pulsante «Scorri» non serve più
+function panel(html) { const s = $('#pScroll'); s.innerHTML = `<div class="enter">${html}</div>`; s.scrollTop = 0; moreSeen = false; requestAnimationFrame(updateMore); }
 // «c'è altro sotto»: su computer e tablet in orizzontale scorre la colonna, su telefono e tablet in verticale scorre la pagina
 const phoneLayout = () => innerWidth <= 980;
 function updateMore() {
   const m = $('#more'), f = $('#moreFade'), foot = $('#pFoot'), sc = $('#pScroll');
-  if (!state.p || $('.app').hidden) { m.hidden = f.hidden = true; return; }
+  if (!state.p || $('.app').hidden) { m.classList.remove('on'); f.classList.remove('on'); return; }
+  const top = phoneLayout() ? scrollY : sc.scrollTop;
+  if (top > 30) moreSeen = true;
   const rest = phoneLayout() ? document.documentElement.scrollHeight - scrollY - innerHeight : sc.scrollHeight - sc.scrollTop - sc.clientHeight;
-  const show = rest > 40;
-  if (show) { const b = foot.offsetHeight; m.style.bottom = (b + 12) + 'px'; f.style.bottom = b + 'px'; }
-  m.hidden = f.hidden = !show;
+  const b = foot.offsetHeight; m.style.bottom = (b + 12) + 'px'; f.style.bottom = b + 'px';
+  f.classList.toggle('on', rest > 40);                 // sfumatura: finché sotto c'è altro
+  m.classList.toggle('on', rest > 40 && !moreSeen);    // pulsante: solo finché non si è scorso
 }
-$('#more').onclick = () => { const sc = $('#pScroll'), by = Math.round((phoneLayout() ? innerHeight : sc.clientHeight) * .55);
+$('#more').onclick = () => { moreSeen = true; const sc = $('#pScroll'), by = Math.round((phoneLayout() ? innerHeight : sc.clientHeight) * .55);
   if (phoneLayout()) window.scrollBy({ top: by, behavior: REDUCED ? 'auto' : 'smooth' }); else sc.scrollBy({ top: by, behavior: REDUCED ? 'auto' : 'smooth' }); };
 $('#pScroll').addEventListener('scroll', () => requestAnimationFrame(updateMore), { passive: true });
 addEventListener('scroll', () => requestAnimationFrame(updateMore), { passive: true });
@@ -1188,7 +1195,7 @@ function route() {
   if (!home) { homeMotion.lenis?.scrollTo(0, { immediate: true, force: true }); window.scrollTo(0, 0); }
   homeMotion.lenis?.[home ? 'start' : 'stop']();
   keepAwake(!home);
-  if (home) { $('#more').hidden = $('#moreFade').hidden = true; }
+  if (home) { $('#more').classList.remove('on'); $('#moreFade').classList.remove('on'); }
   // al ritorno in home la si ridisegna (ultimo comando usato); la prima volta è già disegnata, con l'animazione d'ingresso
   if (home) { renderResume(); if (homeMotion.done || REDUCED || !window.gsap) renderHome(); state = {}; player?.set(null); document.title = 'Euroklimat · Guide ai comandi'; window.scrollTo(0, 0); homeMotion.lenis?.scrollTo(0, { immediate: true }); homeMotion.play?.(); return; }
   state = { p: a, s: b ? Math.max(0, (+b || 1) - 1) : null };
