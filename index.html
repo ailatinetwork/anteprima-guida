@@ -189,6 +189,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
 .next small{display:block;color:var(--ink-3);font-size:14px}
 .enter{animation:enter .42s var(--ease) both}
 @keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes enter-fade{from{opacity:0}to{opacity:1}}
 
 
 /* procedure riconoscibili: miniatura della schermata tipica */
@@ -421,7 +422,11 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
 /* telefono e tablet in verticale abbastanza alti: il terminale resta fermo sotto la barra verde e scorre solo la scheda del passo
    (sotto i 700px d'altezza il testo resterebbe in una striscia troppo bassa: lì si scorre tutto insieme) */
 @media (max-width:980px) and (min-height:700px){
-  .plate{position:sticky;top:56px;z-index:10;box-shadow:0 1px 0 var(--line-2)}
+  .plate{position:sticky;top:56px;z-index:10;box-shadow:0 1px 0 var(--line-2);-webkit-transform:translateZ(0);transform:translateZ(0)}
+  /* Safari su iPhone: la scheda (con l'animazione d'ingresso) finiva sopra il terminale bloccato mentre scorreva.
+     Livelli espliciti: scheda sotto, terminale sopra; e l'animazione d'ingresso della scheda non crea un livello proprio */
+  .panel{position:relative;z-index:1}
+  .panel .enter{animation-name:enter-fade}
 }
 /* tablet e telefono: la barra delle procedure diventa un menu che si apre dal pulsante «Procedure» */
 @media (max-width:1199px){
