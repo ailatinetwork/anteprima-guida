@@ -111,7 +111,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 
 /* scheda */
 .panel{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line)}
-.panel .scroll{flex:1;overflow:auto;padding:34px 34px 24px}
+.panel .scroll{flex:1;overflow-x:hidden;overflow-y:auto;padding:34px 34px 24px}   /* la colonna scorre solo in verticale */
 .panel .foot{padding:16px 20px 20px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
 .panel .foot.one{grid-template-columns:1fr}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:12px;height:58px;padding:0 22px;border-radius:var(--r);background:var(--brand-2);color:#fff;font-weight:700;font-size:17px;text-decoration:none;transition:background .2s,transform .2s var(--ease)}
@@ -283,6 +283,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
   body{font-size:18px}
   .grp a{font-size:16.5px;padding:10px 12px}
   .panel .scroll{padding:44px 44px 28px}
+  .done-band{margin:-44px -44px 30px;padding:40px 44px 34px}
   .panel h1{font-size:44px}
   .lead{font-size:21px}
   .cmdbar .id b{font-size:40px}
@@ -445,6 +446,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
 @media (min-width:981px) and (max-width:1199px){
   .app{grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 56px);height:calc(100dvh - 56px)}
   .panel .scroll{padding:30px 30px 20px}
+  .done-band{margin:-30px -30px 24px;padding:30px 30px 28px}
 }
 @media (max-width:980px){
   .app{display:block;height:auto;min-height:100%}
