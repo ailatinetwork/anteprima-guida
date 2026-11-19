@@ -270,7 +270,7 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
 .p2press{inset:3%;border-radius:inherit;background:#0b1a12;opacity:0}
 /* velo arancione sul tasto: in moltiplica sopra la foto, così il simbolo nero del tasto resta leggibile */
 .p2fill{position:absolute;transform:translate(-50%,-50%);border-radius:12%/11%;background:var(--call-glow);mix-blend-mode:multiply;opacity:0;pointer-events:none}
-.p2finger{left:50%;top:50%;width:92%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(23,36,28,.32) 0,rgba(23,36,28,.26) 58%,rgba(23,36,28,.1) 84%,rgba(23,36,28,0) 100%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.95),0 4px 10px rgba(0,20,10,.28)}   /* dito: abbastanza pieno da vedersi anche sul telefono */
+.p2finger{left:50%;top:50%;width:125%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);background:rgba(255,255,255,.5);box-shadow:inset 0 0 0 2px rgba(255,255,255,.95),0 0 0 1.5px rgba(23,36,28,.28),0 6px 14px rgba(0,20,10,.25)}   /* dito «tocco iPhone» (prova B, scelta di Alberto 19/11/2026) */
 .p2ripple{left:50%;top:50%;width:94%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--call)}
 .p2hold{left:50%;top:50%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(-90deg);overflow:visible}
 .p2hold circle{fill:none;stroke:var(--call);stroke-width:6;stroke-dasharray:100;stroke-dashoffset:100;opacity:0;stroke-linecap:round}
@@ -452,7 +452,6 @@ h3{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;c
   .player{left:12px;right:12px;bottom:10px;column-gap:12px;row-gap:9px}
   .player .lbl{font-size:13.5px}
   .player .track .knob{width:18px;height:18px;margin:-9px 0 0 -9px}
-  .p2finger{width:118%}   /* sul telefono il tasto è piccolo: il dito un po' più grande del tasto */
   .ill{left:12px;top:90px;width:min(210px,56%);padding:10px 12px 10px}
   .panel{border-left:0}
   .panel .scroll{padding:28px 20px 32px;overflow:visible}
@@ -869,10 +868,11 @@ class Viewer {
 // u = tempo dall'inizio dell'evento; il dito arriva (0..A), contatto in A, giù rapido, eventuale tenuta, su con rimbalzo
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KA = { A: .46, DOWN: .08, UP: .14 };   // ritmo: circa un quarto più lento della versione veloce
+const LEAD = 2;   // secondi in cui, a inizio passo, il primo tasto da premere resta acceso prima del dito
 function keyAnim(u, hold) {
   const { A, DOWN } = KA, rel = A + DOWN + hold, o = {};
-  // «Riduci movimento» (iPhone, Mac): niente animazione, ma il dito resta fermo sul tasto per tutta la pressione: indica il tasto, non è decorazione
-  if (REDUCED) { const on = u >= 0 && u < rel + .3, down = u >= A * .5 && u < rel + .3; return { press: on && u >= A ? 1 : 0, finger: down ? 1 : 0, fscale: 1, ripple: 0, on: on ? 1 : 0, pre: 1, hold: hold && u >= A ? Math.min(1, (u - A) / (hold + DOWN)) : 0 }; }
+  // con «Riduci movimento» la pressione del tasto resta animata: è l'informazione della guida, non una decorazione
+  // (si tolgono solo gli effetti decorativi: ingresso della home, dissolvenze del display)
   o.on = u >= 0 && u < rel + .35 ? Math.min(1, u / .18, (rel + .35 - u) / .25) : 0;
   o.pre = u < A ? Math.max(0, u / A) : 1;
   // dito: arriva sul tasto, resta durante la pressione, poi si solleva
@@ -894,10 +894,11 @@ function keyAnim(u, hold) {
 /* ════════ Riproduzione di un passo ════════ */
 // ogni battuta diventa un evento con durata; le schermate dopo un tasto compaiono al rilascio
 function timeline(step) {
-  const ev = []; let t = 0, first = true;
+  const ev = []; let t = 0, first = true, lead = true;
   for (const b of step.b) {
     if (b.ill) continue;
     if (b.key) {
+      if (lead) { t = Math.max(t, LEAD); lead = false; }   // il primo tasto si vede acceso prima che arrivi il dito
       const keys = [].concat(b.key), hold = b.hold ? b.hold * .6 : 0;
       const d = KA.A + KA.DOWN + hold + KA.UP; ev.push({ type: 'key', keys, t0: t, d, hold, holdS: b.hold || 0 }); t += d;
     } else { const d = first ? .85 : 1.05; ev.push({ type: 'scr', s: b, t0: t, d }); t += d; first = false; }
@@ -939,6 +940,9 @@ class Player {
       }
     }
     if (scr !== this.cur) { const first = this.cur === null; this.cur = scr; if (first) drawScreen(this.v.disp, scr); else this.v.showScreen(scr); mirrorScreen(scr); }
+    // attesa iniziale: il primo tasto pulsa piano in arancione finché non arriva il dito
+    const fk = ev.find(e => e.type === 'key');
+    if (fk && t < fk.t0) { const a = Math.min(1, t / .35) * (.7 + .3 * (.5 + .5 * Math.sin(t * Math.PI * 2 / 1.1))); fk.keys.forEach(k => st[k] = { on: a, pre: 0 }); }
     this.v.setKeys(st);
     $('#trackFill').style.width = (t / dur * 100) + '%'; $('#knob').style.left = (t / dur * 100) + '%';
     $('#track').setAttribute('aria-valuenow', Math.round(t / dur * 100));
